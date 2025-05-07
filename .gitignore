@@ -1,0 +1,42 @@
+# Gradle build files
+.gradle/
+build/
+
+# IntelliJ IDEA project files
+.idea/
+*.iml
+out/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Java class files
+*.class
+
+# Temporary files
+*.tmp
+*.swp
+
+# Generated files
+gen/
+generated/
+
+# Akka persistence (if storing data locally)
+snapshot/
+journal/
+
+# JAR/WAR/EAR outputs
+*.jar
+*.war
+*.ear
+
+# Environment files
+.env
+*.env
+
+# Caches
+.cache/
