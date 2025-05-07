@@ -1,4 +1,4 @@
-package at.fhv.sysarch.lab2.homeautomation.commands.environment.temperature;
+package at.fhv.sysarch.lab2.homeautomation.commands.temperature;
 
 public final class ReadTemperature implements  TemperatureCommand{
     public final Double value;
