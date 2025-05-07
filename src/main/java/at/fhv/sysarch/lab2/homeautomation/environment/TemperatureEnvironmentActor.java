@@ -9,17 +9,17 @@ import at.fhv.sysarch.lab2.homeautomation.commands.temperature.TemperatureComman
 import java.time.Duration;
 import java.util.Random;
 
-public class TemperatureEnvironmentActor extends AbstractBehavior<TemperatureEnvironmentActor.TempActorCommand> {
+public class TemperatureEnvironmentActor extends AbstractBehavior<TemperatureEnvironmentActor.TemperatureEnvironmentCommand> {
 
-    public interface TempActorCommand {}
+    public interface TemperatureEnvironmentCommand {}
 
-    public static class Tick implements TempActorCommand {}
+    public static class Tick implements TemperatureEnvironmentCommand {}
 
-    public static class StartSimulation implements TempActorCommand {}
+    public static class StartSimulation implements TemperatureEnvironmentCommand {}
 
-    public static class StopSimulation implements TempActorCommand {}
+    public static class StopSimulation implements TemperatureEnvironmentCommand {}
 
-    public static class SetTemperature implements TempActorCommand {
+    public static class SetTemperature implements TemperatureEnvironmentCommand {
         public final double value;
 
         public SetTemperature(double value) {
@@ -28,29 +28,28 @@ public class TemperatureEnvironmentActor extends AbstractBehavior<TemperatureEnv
     }
 
     private final ActorRef<TemperatureCommand> sensor;
-    private final TimerScheduler<TempActorCommand> timers;
+    private final TimerScheduler<TemperatureEnvironmentCommand> timers;
     private final Random random = new Random();
     private boolean simulate = true;
     private double currentTemperature = 21.0;
 
-    private TemperatureEnvironmentActor(ActorContext<TempActorCommand> context,
-                                        TimerScheduler<TempActorCommand> timers,
+    private TemperatureEnvironmentActor(ActorContext<TemperatureEnvironmentCommand> context,
+                                        TimerScheduler<TemperatureEnvironmentCommand> timers,
                                         ActorRef<TemperatureCommand> sensor) {
         super(context);
         this.sensor = sensor;
         this.timers = timers;
 
-        // Start periodic updates
         timers.startTimerAtFixedRate(new Tick(), Duration.ofSeconds(2));
         getContext().getLog().info("TemperatureEnvironmentActor started with initial temperature: {}", currentTemperature);
     }
 
-    public static Behavior<TempActorCommand> create(ActorRef<TemperatureCommand> sensor) {
+    public static Behavior<TemperatureEnvironmentCommand> create(ActorRef<TemperatureCommand> sensor) {
         return Behaviors.withTimers(timers -> Behaviors.setup(ctx -> new TemperatureEnvironmentActor(ctx, timers, sensor)));
     }
 
     @Override
-    public Receive<TempActorCommand> createReceive() {
+    public Receive<TemperatureEnvironmentCommand> createReceive() {
         return newReceiveBuilder()
                 .onMessage(Tick.class, this::onTick)
                 .onMessage(StartSimulation.class, this::onStart)
@@ -59,9 +58,9 @@ public class TemperatureEnvironmentActor extends AbstractBehavior<TemperatureEnv
                 .build();
     }
 
-    private Behavior<TempActorCommand> onTick(Tick msg) {
+    private Behavior<TemperatureEnvironmentCommand> onTick(Tick msg) {
         if (simulate) {
-            double delta = -2 + (random.nextDouble()); // Change between -0.5 to +0.5
+            double delta = -2 + (random.nextDouble());
             currentTemperature += delta;
             getContext().getLog().info("Simulated temperature: {}", currentTemperature);
 
@@ -70,19 +69,19 @@ public class TemperatureEnvironmentActor extends AbstractBehavior<TemperatureEnv
         return this;
     }
 
-    private Behavior<TempActorCommand> onStart(StartSimulation msg) {
+    private Behavior<TemperatureEnvironmentCommand> onStart(StartSimulation msg) {
         simulate = true;
         getContext().getLog().info("Temperature simulation resumed");
         return this;
     }
 
-    private Behavior<TempActorCommand> onStop(StopSimulation msg) {
+    private Behavior<TemperatureEnvironmentCommand> onStop(StopSimulation msg) {
         simulate = false;
         getContext().getLog().info("Temperature simulation paused");
         return this;
     }
 
-    private Behavior<TempActorCommand> onSetTemperature(SetTemperature msg) {
+    private Behavior<TemperatureEnvironmentCommand> onSetTemperature(SetTemperature msg) {
         simulate = false;
         currentTemperature = msg.value;
         getContext().getLog().info("Manually set temperature to {}", currentTemperature);

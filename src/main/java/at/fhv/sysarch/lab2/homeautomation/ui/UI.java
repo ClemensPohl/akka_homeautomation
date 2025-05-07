@@ -10,6 +10,7 @@ import akka.actor.typed.javadsl.Receive;
 import at.fhv.sysarch.lab2.homeautomation.commands.airCondition.AirConditionCommand;
 import at.fhv.sysarch.lab2.homeautomation.commands.temperature.ReadTemperature;
 import at.fhv.sysarch.lab2.homeautomation.commands.temperature.TemperatureCommand;
+import at.fhv.sysarch.lab2.homeautomation.environment.TemperatureEnvironmentActor;
 
 import java.util.Scanner;
 
@@ -17,15 +18,17 @@ public class UI extends AbstractBehavior<Void> {
 
     private final ActorRef<TemperatureCommand> tempSensor;
     private final ActorRef<AirConditionCommand> airCondition;
+    private final ActorRef<TemperatureEnvironmentActor.TemperatureEnvironmentCommand> tempEnv;
 
-    public static Behavior<Void> create(ActorRef<TemperatureCommand> tempSensor, ActorRef<AirConditionCommand> airCondition) {
-        return Behaviors.setup(context -> new UI(context, tempSensor, airCondition));
+    public static Behavior<Void> create(ActorRef<TemperatureCommand> tempSensor, ActorRef<AirConditionCommand> airCondition, ActorRef<TemperatureEnvironmentActor.TemperatureEnvironmentCommand> tempEnv) {
+        return Behaviors.setup(context -> new UI(context, tempSensor, airCondition, tempEnv));
     }
 
-    private  UI(ActorContext<Void> context, ActorRef<TemperatureCommand> tempSensor, ActorRef<AirConditionCommand> airCondition) {
+    private  UI(ActorContext<Void> context, ActorRef<TemperatureCommand> tempSensor, ActorRef<AirConditionCommand> airCondition, ActorRef<TemperatureEnvironmentActor.TemperatureEnvironmentCommand> tempEnv) {
         super(context);
         this.airCondition = airCondition;
         this.tempSensor = tempSensor;
+        this.tempEnv = tempEnv;
         new Thread(this::runCommandLine).start();
 
         getContext().getLog().info("UI started");
@@ -42,8 +45,21 @@ public class UI extends AbstractBehavior<Void> {
             reader = scanner.nextLine();
             // TODO: change input handling
             String[] command = reader.split(" ");
-            if(command[0].equals("t")) {
-                this.tempSensor.tell(new ReadTemperature(Double.valueOf(command[1])));
+            switch (command[0]) {
+                case "t": // t <value> — manually set temperature to sensor
+                    tempSensor.tell(new ReadTemperature(Double.parseDouble(command[1])));
+                    break;
+                case "env-set": // env-set <value> — set fixed temperature
+                    tempEnv.tell(new TemperatureEnvironmentActor.SetTemperature(Double.parseDouble(command[1])));
+                    break;
+                case "env-start":
+                    tempEnv.tell(new TemperatureEnvironmentActor.StartSimulation());
+                    break;
+                case "env-stop":
+                    tempEnv.tell(new TemperatureEnvironmentActor.StopSimulation());
+                    break;
+                default:
+                    System.out.println("Unknown command.");
             }
             // TODO: process Input
         }
