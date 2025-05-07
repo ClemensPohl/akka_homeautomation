@@ -10,7 +10,7 @@ import akka.actor.typed.javadsl.Receive;
 import at.fhv.sysarch.lab2.homeautomation.devices.AirCondition;
 import at.fhv.sysarch.lab2.homeautomation.devices.TemperatureSensor;
 import at.fhv.sysarch.lab2.homeautomation.commands.airCondition.AirConditionCommand;
-import at.fhv.sysarch.lab2.homeautomation.commands.temperature.TemperatureCommand;
+import at.fhv.sysarch.lab2.homeautomation.commands.environment.temperature.TemperatureCommand;
 import at.fhv.sysarch.lab2.homeautomation.ui.UI;
 
 import java.util.UUID;

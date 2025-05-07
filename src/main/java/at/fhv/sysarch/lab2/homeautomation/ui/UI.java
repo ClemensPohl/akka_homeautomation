@@ -8,8 +8,8 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import at.fhv.sysarch.lab2.homeautomation.commands.airCondition.AirConditionCommand;
-import at.fhv.sysarch.lab2.homeautomation.commands.temperature.ReadTemperature;
-import at.fhv.sysarch.lab2.homeautomation.commands.temperature.TemperatureCommand;
+import at.fhv.sysarch.lab2.homeautomation.commands.environment.temperature.ReadTemperature;
+import at.fhv.sysarch.lab2.homeautomation.commands.environment.temperature.TemperatureCommand;
 
 import java.util.Scanner;
 
