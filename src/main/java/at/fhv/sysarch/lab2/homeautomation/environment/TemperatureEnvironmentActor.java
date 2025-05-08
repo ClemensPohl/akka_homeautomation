@@ -31,7 +31,7 @@ public class TemperatureEnvironmentActor extends AbstractBehavior<TemperatureEnv
     private final TimerScheduler<TemperatureEnvironmentCommand> timers;
     private final Random random = new Random();
     private boolean simulate = true;
-    private double currentTemperature = 21.0;
+    private double currentTemperature = 22.0;
 
     private TemperatureEnvironmentActor(ActorContext<TemperatureEnvironmentCommand> context,
                                         TimerScheduler<TemperatureEnvironmentCommand> timers,
@@ -59,15 +59,20 @@ public class TemperatureEnvironmentActor extends AbstractBehavior<TemperatureEnv
     }
 
     private Behavior<TemperatureEnvironmentCommand> onTick(Tick msg) {
+        int minTemp = 18;
+        int maxTemp = 25;
+
         if (simulate) {
-            double delta = -2 + (random.nextDouble());
+            double delta = (currentTemperature > minTemp) ? -0.5 : (currentTemperature < maxTemp ? 0.5 : 0);
             currentTemperature += delta;
-            getContext().getLog().info("Simulated temperature: {}", currentTemperature);
+            currentTemperature = Math.max(minTemp, Math.min(currentTemperature, maxTemp));
 
             sensor.tell(new ReadTemperature(currentTemperature));
         }
+
         return this;
     }
+
 
     private Behavior<TemperatureEnvironmentCommand> onStart(StartSimulation msg) {
         simulate = true;

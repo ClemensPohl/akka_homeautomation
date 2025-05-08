@@ -12,6 +12,7 @@ import at.fhv.sysarch.lab2.homeautomation.commands.airCondition.EnrichedTemperat
 public class AirCondition extends AbstractBehavior<AirConditionCommand> {
 
     private final String identifier;
+    private boolean isCooling = false;
 
     public AirCondition(ActorContext<AirConditionCommand> context, String identifier) {
         super(context);
@@ -32,8 +33,15 @@ public class AirCondition extends AbstractBehavior<AirConditionCommand> {
     }
 
     private Behavior<AirConditionCommand> onReadTemperature(EnrichedTemperature r) {
-        getContext().getLog().info("Aircondition reading {}", r.getValue());
-        // TODO: process temperature
+        if(r.getValue() > 21){
+            isCooling = true;
+        }else if(r.getValue() < 20){
+            isCooling = false;
+        }
+
+        String isCoolingText = isCooling ? "ON" : "OFF";
+
+        getContext().getLog().info("Aircondition reading {} and is turned {}" , r.getValue(), isCoolingText);
 
         return Behaviors.same();
     }
