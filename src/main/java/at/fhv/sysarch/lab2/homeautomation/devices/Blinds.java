@@ -7,7 +7,9 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import at.fhv.sysarch.lab2.homeautomation.commands.blinds.BlindsCommand;
+import at.fhv.sysarch.lab2.homeautomation.commands.blinds.CloseBlinds;
 import at.fhv.sysarch.lab2.homeautomation.commands.blinds.EnrichedWeather;
+import at.fhv.sysarch.lab2.homeautomation.commands.blinds.OpenBlinds;
 import at.fhv.sysarch.lab2.homeautomation.commands.weather.WeatherTypes;
 
 public class Blinds extends AbstractBehavior<BlindsCommand> {
@@ -29,9 +31,12 @@ public class Blinds extends AbstractBehavior<BlindsCommand> {
     public Receive<BlindsCommand> createReceive() {
         return newReceiveBuilder()
                 .onMessage(EnrichedWeather.class, this::onWeatherUpdate)
+                .onMessage(OpenBlinds.class, this::onOpenBlinds)
+                .onMessage(CloseBlinds.class, this::onCloseBlinds)
                 .onSignal(PostStop.class, signal -> onPostStop())
                 .build();
     }
+
 
     private Behavior<BlindsCommand> onWeatherUpdate(EnrichedWeather msg) {
         if (msg.type == WeatherTypes.sunny) {
@@ -39,11 +44,23 @@ public class Blinds extends AbstractBehavior<BlindsCommand> {
         } else {
             isClosed = false;
         }
-
         String status = isClosed ? "CLOSED" : "OPEN";
         getContext().getLog().info("Blinds are now {}", status);
         return this;
     }
+
+    private Behavior<BlindsCommand> onOpenBlinds(OpenBlinds cmd) {
+        isClosed = false;
+        getContext().getLog().info("Blinds manually OPENED");
+        return this;
+    }
+
+    private Behavior<BlindsCommand> onCloseBlinds(CloseBlinds cmd) {
+        isClosed = true;
+        getContext().getLog().info("Blinds manually CLOSED");
+        return this;
+    }
+
 
     private Blinds onPostStop() {
         getContext().getLog().info("Blinds actor {} stopped", identifier);

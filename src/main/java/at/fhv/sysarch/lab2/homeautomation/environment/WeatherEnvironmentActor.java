@@ -43,7 +43,7 @@ public class WeatherEnvironmentActor extends AbstractBehavior<WeatherEnvironment
 
         // Periodic tick
         timers.startTimerAtFixedRate(new Tick(), Duration.ofSeconds(5));
-        getContext().getLog().info("WeatherEnvironmentActor started with initial weather: {}", currentWeather);
+        //getContext().getLog().info("WeatherEnvironmentActor started with initial weather: {}", currentWeather);
     }
 
     public static Behavior<WeatherEnvironmentCommand> create(ActorRef<WeatherCommand> weatherSensor) {
@@ -65,7 +65,7 @@ public class WeatherEnvironmentActor extends AbstractBehavior<WeatherEnvironment
             WeatherTypes[] values = WeatherTypes.values();
             WeatherTypes newWeather = values[random.nextInt(values.length)];
             currentWeather = newWeather;
-            getContext().getLog().info("Simulated weather: {}", currentWeather);
+           // getContext().getLog().info("Simulated weather: {}", currentWeather);
             weatherSensor.tell(new ReadWeather(currentWeather));
         }
         return this;
