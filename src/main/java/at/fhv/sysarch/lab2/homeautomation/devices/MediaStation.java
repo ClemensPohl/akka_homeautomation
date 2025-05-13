@@ -34,8 +34,7 @@ public class MediaStation extends AbstractBehavior<MediaCommand> {
             getContext().getLog().info("Cannot play movie: already playing.");
         } else {
             moviePlaying = true;
-            getContext().getLog().info("Movie started. Closing blinds.");
-            blinds.tell(new CloseBlinds());
+            getContext().getLog().info("Movie started.");
         }
         return this;
     }
@@ -45,8 +44,7 @@ public class MediaStation extends AbstractBehavior<MediaCommand> {
             getContext().getLog().info("No movie is currently playing.");
         } else {
             moviePlaying = false;
-            getContext().getLog().info("Movie stopped. Opening blinds.");
-            blinds.tell(new OpenBlinds());
+            getContext().getLog().info("Movie stopped.");
         }
         return this;
     }

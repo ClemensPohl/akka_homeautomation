@@ -39,7 +39,7 @@ public class Blinds extends AbstractBehavior<BlindsCommand> {
 
 
     private Behavior<BlindsCommand> onWeatherUpdate(EnrichedWeather msg) {
-        if (msg.type == WeatherTypes.sunny) {
+        if (msg.type == WeatherTypes.SUNNY) {
             isClosed = true;
         } else {
             isClosed = false;

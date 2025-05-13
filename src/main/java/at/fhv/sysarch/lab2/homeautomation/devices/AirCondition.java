@@ -41,13 +41,13 @@ public class AirCondition extends AbstractBehavior<AirConditionCommand> {
 
         String isCoolingText = isCooling ? "ON" : "OFF";
 
-        //getContext().getLog().info("Aircondition reading {} and is turned {}" , r.getValue(), isCoolingText);
+        getContext().getLog().info("Aircondition reading {} and is turned {}" , r.getValue(), isCoolingText);
 
         return Behaviors.same();
     }
 
     private AirCondition onPostStop() {
-        //getContext().getLog().info("AirCondition actor {}-{} stopped", identifier);
+        getContext().getLog().info("AirCondition actor {}-{} stopped", identifier);
         return this;
     }
 }

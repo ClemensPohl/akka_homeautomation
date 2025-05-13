@@ -73,7 +73,7 @@ public class UI extends AbstractBehavior<Void> {
                 env-set <value>      → Set fixed environment temperature
                 env-start            → Start temperature simulation
                 env-stop             → Stop temperature simulation
-                weather-set <type>   → Set weather (sunny, cloudy)
+                weather-set <type>   → Set weather (sunny, cloudy, ...)
                 weather-start        → Start weather simulation
                 weather-stop         → Stop weather simulation
                 blinds-open          → Open blinds

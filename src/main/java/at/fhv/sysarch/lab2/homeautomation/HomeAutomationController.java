@@ -20,6 +20,7 @@ import at.fhv.sysarch.lab2.homeautomation.devices.WeatherSensor;
 import at.fhv.sysarch.lab2.homeautomation.devices.Blinds;
 import at.fhv.sysarch.lab2.homeautomation.devices.MediaStation;
 
+import at.fhv.sysarch.lab2.homeautomation.environment.MqttEnvironmentActor;
 import at.fhv.sysarch.lab2.homeautomation.environment.TemperatureEnvironmentActor;
 import at.fhv.sysarch.lab2.homeautomation.environment.WeatherEnvironmentActor;
 import at.fhv.sysarch.lab2.homeautomation.ui.UI;
@@ -56,9 +57,14 @@ public class HomeAutomationController extends AbstractBehavior<Void> {
         ActorRef<MediaCommand> mediaStation =
                 context.spawn(MediaStation.create(blinds), "MediaStation");
 
+        ActorRef<MqttEnvironmentActor.MqttCommand> mqttEnvironment =
+                context.spawn(MqttEnvironmentActor.create(weatherEnv, temperatureEnv), "MqttEnvironment");
+
+
         ActorRef<Void> ui = context.spawn(
                 UI.create(temperatureSensor, airCondition, temperatureEnv, weatherEnv, blinds, mediaStation),
                 "UI");
+
 
         getContext().getLog().info("HomeAutomation Application started");
     }
