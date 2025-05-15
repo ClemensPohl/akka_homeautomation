@@ -4,10 +4,15 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.*;
 import at.fhv.sysarch.lab2.homeautomation.commands.temperature.ReadTemperature;
+import at.fhv.sysarch.lab2.homeautomation.commands.temperature.SetEnvironmentMode;
 import at.fhv.sysarch.lab2.homeautomation.commands.temperature.TemperatureCommand;
+import at.fhv.sysarch.lab2.homeautomation.environment.EnvironmentMode;
+
 
 import java.time.Duration;
 import java.util.Random;
+
+import static at.fhv.sysarch.lab2.homeautomation.environment.EnvironmentMode.INTERNAL;
 
 public class TemperatureEnvironmentActor extends AbstractBehavior<TemperatureEnvironmentActor.TemperatureEnvironmentCommand> {
 
@@ -19,6 +24,9 @@ public class TemperatureEnvironmentActor extends AbstractBehavior<TemperatureEnv
 
     public static class StopSimulation implements TemperatureEnvironmentCommand {}
 
+
+
+
     public static class SetTemperature implements TemperatureEnvironmentCommand {
         public final double value;
 
@@ -27,10 +35,13 @@ public class TemperatureEnvironmentActor extends AbstractBehavior<TemperatureEnv
         }
     }
 
+    private EnvironmentMode currentMode = EnvironmentMode.OFF;
     private final ActorRef<TemperatureCommand> sensor;
     private final TimerScheduler<TemperatureEnvironmentCommand> timers;
     private final Random random = new Random();
-    private boolean simulate = true;
+    private boolean simulate = false;
+
+
     private double currentTemperature = 22.0;
 
     private TemperatureEnvironmentActor(ActorContext<TemperatureEnvironmentCommand> context,
@@ -55,14 +66,15 @@ public class TemperatureEnvironmentActor extends AbstractBehavior<TemperatureEnv
                 .onMessage(StartSimulation.class, this::onStart)
                 .onMessage(StopSimulation.class, this::onStop)
                 .onMessage(SetTemperature.class, this::onSetTemperature)
+                .onMessage(SetEnvironmentMode.class, this::onSetEnvironmentMode)
                 .build();
     }
 
     private Behavior<TemperatureEnvironmentCommand> onTick(Tick msg) {
-        int minTemp = 18;
-        int maxTemp = 25;
+        if (simulate && currentMode == EnvironmentMode.INTERNAL) {
+            int minTemp = 18;
+            int maxTemp = 25;
 
-        if (simulate) {
             double delta = (currentTemperature > minTemp) ? -0.5 : (currentTemperature < maxTemp ? 0.5 : 0);
             currentTemperature += delta;
             currentTemperature = Math.max(minTemp, Math.min(currentTemperature, maxTemp));
@@ -73,6 +85,22 @@ public class TemperatureEnvironmentActor extends AbstractBehavior<TemperatureEnv
         return this;
     }
 
+
+    private Behavior<TemperatureEnvironmentCommand> onSetEnvironmentMode(SetEnvironmentMode msg) {
+        currentMode = msg.mode;
+        getContext().getLog().info("Temperature environment mode set to {}", currentMode);
+
+        if (currentMode != EnvironmentMode.INTERNAL) {
+            simulate = false;
+            getContext().getLog().info("Stopped temperature simulation because mode is not INTERNAL");
+        }
+        else {
+            simulate = true;
+            getContext().getLog().info("Started temperature simulation because mode is INTERNAL");
+        }
+
+        return this;
+    }
 
     private Behavior<TemperatureEnvironmentCommand> onStart(StartSimulation msg) {
         simulate = true;
@@ -86,10 +114,11 @@ public class TemperatureEnvironmentActor extends AbstractBehavior<TemperatureEnv
         return this;
     }
 
+
     private Behavior<TemperatureEnvironmentCommand> onSetTemperature(SetTemperature msg) {
         simulate = false;
         currentTemperature = msg.value;
-        getContext().getLog().info("Manually set temperature to {}", currentTemperature);
+        getContext().getLog().info("Set temperature to {}", currentTemperature);
 
         sensor.tell(new ReadTemperature(currentTemperature));
         return this;

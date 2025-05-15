@@ -28,11 +28,21 @@ public class WeatherEnvironmentActor extends AbstractBehavior<WeatherEnvironment
         }
     }
 
+    public static class SetEnvironmentMode implements WeatherEnvironmentCommand {
+        public final EnvironmentMode mode;
+
+        public SetEnvironmentMode(EnvironmentMode mode) {
+            this.mode = mode;
+        }
+    }
+
     private final ActorRef<WeatherCommand> weatherSensor;
     private final TimerScheduler<WeatherEnvironmentCommand> timers;
     private final Random random = new Random();
-    private boolean simulate = true;
+    private boolean simulate = false;
     private WeatherTypes currentWeather = WeatherTypes.SUNNY;
+
+    private EnvironmentMode currentMode = EnvironmentMode.OFF;
 
     private WeatherEnvironmentActor(ActorContext<WeatherEnvironmentCommand> context,
                                     TimerScheduler<WeatherEnvironmentCommand> timers,
@@ -40,7 +50,6 @@ public class WeatherEnvironmentActor extends AbstractBehavior<WeatherEnvironment
         super(context);
         this.weatherSensor = weatherSensor;
         this.timers = timers;
-
 
         timers.startTimerAtFixedRate(new Tick(), Duration.ofSeconds(5));
         getContext().getLog().info("WeatherEnvironmentActor started with initial weather: {}", currentWeather);
@@ -57,15 +66,16 @@ public class WeatherEnvironmentActor extends AbstractBehavior<WeatherEnvironment
                 .onMessage(StartSimulation.class, this::onStartSimulation)
                 .onMessage(StopSimulation.class, this::onStopSimulation)
                 .onMessage(SetWeather.class, this::onSetWeather)
+                .onMessage(SetEnvironmentMode.class, this::onSetEnvironmentMode)
                 .build();
     }
 
     private Behavior<WeatherEnvironmentCommand> onTick(Tick tick) {
-        if (simulate) {
+        if (simulate && currentMode == EnvironmentMode.INTERNAL) {
             WeatherTypes[] values = WeatherTypes.values();
             WeatherTypes newWeather = values[random.nextInt(values.length)];
             currentWeather = newWeather;
-           getContext().getLog().info("Simulated weather: {}", currentWeather);
+            getContext().getLog().info("Simulated weather: {}", currentWeather);
             weatherSensor.tell(new ReadWeather(currentWeather));
         }
         return this;
@@ -86,8 +96,24 @@ public class WeatherEnvironmentActor extends AbstractBehavior<WeatherEnvironment
     private Behavior<WeatherEnvironmentCommand> onSetWeather(SetWeather cmd) {
         simulate = false;
         currentWeather = cmd.value;
-        getContext().getLog().info("Manually set weather to {}", currentWeather);
+        getContext().getLog().info("Set weather to {}", currentWeather);
         weatherSensor.tell(new ReadWeather(currentWeather));
+        return this;
+    }
+
+    private Behavior<WeatherEnvironmentCommand> onSetEnvironmentMode(SetEnvironmentMode cmd) {
+        currentMode = cmd.mode;
+        getContext().getLog().info("Weather environment mode set to {}", currentMode);
+
+        if (currentMode != EnvironmentMode.INTERNAL) {
+            simulate = false;
+            getContext().getLog().info("Stopped weather simulation because mode is not INTERNAL");
+        }
+        else {
+            simulate = true;
+            getContext().getLog().info("Started weather simulation because mode is INTERNAL");
+        }
+
         return this;
     }
 }

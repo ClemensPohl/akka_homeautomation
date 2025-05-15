@@ -16,9 +16,14 @@ import at.fhv.sysarch.lab2.homeautomation.commands.blinds.OpenBlinds;
 import at.fhv.sysarch.lab2.homeautomation.commands.blinds.CloseBlinds;
 import at.fhv.sysarch.lab2.homeautomation.commands.temperature.ReadTemperature;
 import at.fhv.sysarch.lab2.homeautomation.commands.temperature.TemperatureCommand;
+import at.fhv.sysarch.lab2.homeautomation.commands.temperature.SetEnvironmentMode;
 import at.fhv.sysarch.lab2.homeautomation.commands.weather.WeatherTypes;
+import at.fhv.sysarch.lab2.homeautomation.environment.EnvironmentMode;
+import at.fhv.sysarch.lab2.homeautomation.environment.MqttEnvironmentActor;
 import at.fhv.sysarch.lab2.homeautomation.environment.TemperatureEnvironmentActor;
 import at.fhv.sysarch.lab2.homeautomation.environment.WeatherEnvironmentActor;
+
+
 
 import java.util.Scanner;
 
@@ -30,6 +35,8 @@ public class UI extends AbstractBehavior<Void> {
     private final ActorRef<WeatherEnvironmentActor.WeatherEnvironmentCommand> weatherEnv;
     private final ActorRef<BlindsCommand> blinds;
     private final ActorRef<MediaCommand> mediaStation;
+    private final ActorRef<MqttEnvironmentActor.MqttCommand> mqttEnv;
+
 
     public static Behavior<Void> create(
             ActorRef<TemperatureCommand> tempSensor,
@@ -38,8 +45,9 @@ public class UI extends AbstractBehavior<Void> {
             ActorRef<WeatherEnvironmentActor.WeatherEnvironmentCommand> weatherEnv,
             ActorRef<BlindsCommand> blinds,
             ActorRef<MediaCommand> mediaStation
+            ActorRef<MqttEnvironmentActor.MqttCommand> mqttEnv
     ) {
-        return Behaviors.setup(ctx -> new UI(ctx, tempSensor, airCondition, tempEnv, weatherEnv, blinds, mediaStation));
+        return Behaviors.setup(ctx -> new UI(ctx, tempSensor, airCondition, tempEnv, weatherEnv, blinds, mediaStation, mqttEnv));
     }
 
     private UI(
@@ -80,6 +88,7 @@ public class UI extends AbstractBehavior<Void> {
                 blinds-close         → Close blinds
                 movie-start          → Start a movie
                 movie-stop           → Stop the movie
+                env-mode <mode>      → Set environment mode (INTERNAL, EXTERNAL, OFF)
                 quit                 → Exit
                 """);
 
@@ -137,6 +146,19 @@ public class UI extends AbstractBehavior<Void> {
                 case "movie-stop":
                     mediaStation.tell(new StopMovie());
                     break;
+
+                case "env-mode":
+                    if (command.length == 2) {
+                        try {
+                            EnvironmentMode mode = EnvironmentMode.valueOf(command[1].toUpperCase());
+                            tempEnv.tell(new SetEnvironmentMode(mode));
+                            mqttEnv.tell(new MqttEnvironmentActor.SetEnvironmentMode(mode));
+                        } catch (IllegalArgumentException e) {
+                            System.out.println("Invalid mode. Use INTERNAL, EXTERNAL, or OFF.");
+                        }
+                    }
+                    break;
+
 
                 default:
                     System.out.println("Unknown command.");

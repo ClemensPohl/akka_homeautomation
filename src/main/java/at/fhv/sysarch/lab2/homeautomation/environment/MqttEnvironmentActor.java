@@ -27,11 +27,21 @@ public class MqttEnvironmentActor extends AbstractBehavior<MqttEnvironmentActor.
         }
     }
 
+    public static class SetEnvironmentMode implements MqttCommand {
+        public final EnvironmentMode mode;
+
+        public SetEnvironmentMode(EnvironmentMode mode) {
+            this.mode = mode;
+        }
+    }
+
     private final String broker = "tcp://10.0.40.161:1883";
     private final List<String> topics = Arrays.asList("weather/condition", "temperature/value");
     private MqttClient client;
     private final ActorRef<WeatherEnvironmentActor.WeatherEnvironmentCommand> weatherController;
     private final ActorRef<TemperatureEnvironmentActor.TemperatureEnvironmentCommand> temperatureController;
+
+    private EnvironmentMode currentMode = EnvironmentMode.EXTERNAL;
 
     public static Behavior<MqttCommand> create(
             ActorRef<WeatherEnvironmentActor.WeatherEnvironmentCommand> weatherController,
@@ -103,10 +113,17 @@ public class MqttEnvironmentActor extends AbstractBehavior<MqttEnvironmentActor.
     public Receive<MqttCommand> createReceive() {
         return newReceiveBuilder()
                 .onMessage(MessageReceived.class, this::onMessageReceived)
+                .onMessage(SetEnvironmentMode.class, this::onSetMode)
                 .build();
     }
 
     private Behavior<MqttCommand> onMessageReceived(MessageReceived msg) {
+        // Only react if mode is EXTERNAL
+        if (currentMode != EnvironmentMode.EXTERNAL) {
+            getContext().getLog().info("Ignoring MQTT message because mode is {}", currentMode);
+            return this;
+        }
+
         switch (msg.topic) {
             case "weather/condition":
                 WeatherTypes weatherType = parseWeather(msg.message);
@@ -125,7 +142,12 @@ public class MqttEnvironmentActor extends AbstractBehavior<MqttEnvironmentActor.
             default:
                 getContext().getLog().warn("Unknown MQTT topic '{}': {}", msg.topic, msg.message);
         }
+        return this;
+    }
 
+    private Behavior<MqttCommand> onSetMode(SetEnvironmentMode msg) {
+        getContext().getLog().info("MQTT Environment mode set to {}", msg.mode);
+        currentMode = msg.mode;
         return this;
     }
 
@@ -150,4 +172,3 @@ public class MqttEnvironmentActor extends AbstractBehavior<MqttEnvironmentActor.
         }
     }
 }
-
