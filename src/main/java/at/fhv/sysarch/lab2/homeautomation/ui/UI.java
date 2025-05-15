@@ -44,7 +44,7 @@ public class UI extends AbstractBehavior<Void> {
             ActorRef<TemperatureEnvironmentActor.TemperatureEnvironmentCommand> tempEnv,
             ActorRef<WeatherEnvironmentActor.WeatherEnvironmentCommand> weatherEnv,
             ActorRef<BlindsCommand> blinds,
-            ActorRef<MediaCommand> mediaStation
+            ActorRef<MediaCommand> mediaStation,
             ActorRef<MqttEnvironmentActor.MqttCommand> mqttEnv
     ) {
         return Behaviors.setup(ctx -> new UI(ctx, tempSensor, airCondition, tempEnv, weatherEnv, blinds, mediaStation, mqttEnv));
@@ -57,7 +57,7 @@ public class UI extends AbstractBehavior<Void> {
             ActorRef<TemperatureEnvironmentActor.TemperatureEnvironmentCommand> tempEnv,
             ActorRef<WeatherEnvironmentActor.WeatherEnvironmentCommand> weatherEnv,
             ActorRef<BlindsCommand> blinds,
-            ActorRef<MediaCommand> mediaStation
+            ActorRef<MediaCommand> mediaStation, ActorRef<MqttEnvironmentActor.MqttCommand> mqttEnv
     ) {
         super(context);
         this.tempSensor = tempSensor;
@@ -66,6 +66,7 @@ public class UI extends AbstractBehavior<Void> {
         this.weatherEnv = weatherEnv;
         this.blinds = blinds;
         this.mediaStation = mediaStation;
+        this.mqttEnv = mqttEnv;
 
         new Thread(this::runCommandLine).start();
         context.getLog().info("UI started");

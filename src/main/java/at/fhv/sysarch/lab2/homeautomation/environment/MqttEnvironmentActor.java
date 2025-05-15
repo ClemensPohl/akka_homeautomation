@@ -124,6 +124,8 @@ public class MqttEnvironmentActor extends AbstractBehavior<MqttEnvironmentActor.
             return this;
         }
 
+        System.out.println("receivegd: " + msg.message);
+
         switch (msg.topic) {
             case "weather/condition":
                 WeatherTypes weatherType = parseWeather(msg.message);
@@ -136,6 +138,7 @@ public class MqttEnvironmentActor extends AbstractBehavior<MqttEnvironmentActor.
                 Double temperature = parseTemperature(msg.message);
                 if (temperature != null) {
                     temperatureController.tell(new TemperatureEnvironmentActor.SetTemperature(temperature));
+                    System.out.println("Set Temperatur from mqtt to " + temperature);
                 }
                 break;
 

@@ -61,8 +61,7 @@ public class HomeAutomationController extends AbstractBehavior<Void> {
                 context.spawn(MqttEnvironmentActor.create(weatherEnv, temperatureEnv), "MqttEnvironment");
 
 
-        ActorRef<Void> ui = context.spawn(
-                UI.create(temperatureSensor, airCondition, temperatureEnv, weatherEnv, blinds, mediaStation),
+        ActorRef<Void> ui = context.spawn(UI.create(temperatureSensor, airCondition, temperatureEnv, weatherEnv, blinds, mediaStation, mqttEnvironment),
                 "UI");
 
 
