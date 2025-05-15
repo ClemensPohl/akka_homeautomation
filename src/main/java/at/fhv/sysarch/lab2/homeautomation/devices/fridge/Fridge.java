@@ -5,6 +5,11 @@ import akka.actor.typed.javadsl.*;
 import at.fhv.sysarch.lab2.homeautomation.commands.fridge.FridgeCommand;
 import at.fhv.sysarch.lab2.homeautomation.commands.fridge.AddProduct;
 import at.fhv.sysarch.lab2.homeautomation.commands.fridge.RemoveProduct;
+import at.fhv.sysarch.lab2.homeautomation.commands.fridge.QueryProducts;
+import at.fhv.sysarch.lab2.homeautomation.commands.fridge.ProductsResponse;
+import akka.actor.typed.ActorRef;
+
+
 
 
 import java.util.ArrayList;
@@ -33,8 +38,16 @@ public class Fridge extends AbstractBehavior<FridgeCommand> {
         return newReceiveBuilder()
                 .onMessage(AddProduct.class, this::onAddProduct)
                 .onMessage(RemoveProduct.class, this::onRemoveProduct)
+                .onMessage(QueryProducts.class, this::onQueryProducts)
                 .build();
     }
+
+    private Behavior<FridgeCommand> onQueryProducts(QueryProducts cmd) {
+        cmd.replyTo.tell(new ProductsResponse(new ArrayList<>(products)));
+        getContext().getLog().info("Sent product list ({} items)", products.size());
+        return this;
+    }
+
 
     private Behavior<FridgeCommand> onAddProduct(AddProduct cmd) {
         int currentCount = SpaceSensor.getProductCount(products);
@@ -46,7 +59,7 @@ public class Fridge extends AbstractBehavior<FridgeCommand> {
             getContext().getLog().warn("Cannot add product: Weight limit exceeded");
         } else {
             products.add(cmd.product);
-            getContext().getLog().info("Added product: {}", cmd.product.getName());
+            getContext().getLog().info("Here is a Receipt. Added product: {}", cmd.product.getName());
         }
         return this;
     }

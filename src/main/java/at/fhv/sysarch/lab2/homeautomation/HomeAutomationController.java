@@ -9,6 +9,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 
 import at.fhv.sysarch.lab2.homeautomation.commands.airCondition.AirConditionCommand;
+import at.fhv.sysarch.lab2.homeautomation.commands.fridge.FridgeCommand;
 import at.fhv.sysarch.lab2.homeautomation.commands.temperature.TemperatureCommand;
 import at.fhv.sysarch.lab2.homeautomation.commands.weather.WeatherCommand;
 import at.fhv.sysarch.lab2.homeautomation.commands.blinds.BlindsCommand;
@@ -20,6 +21,8 @@ import at.fhv.sysarch.lab2.homeautomation.devices.WeatherSensor;
 import at.fhv.sysarch.lab2.homeautomation.devices.Blinds;
 import at.fhv.sysarch.lab2.homeautomation.devices.MediaStation;
 
+import at.fhv.sysarch.lab2.homeautomation.devices.fridge.Fridge;
+import at.fhv.sysarch.lab2.homeautomation.commands.fridge.FridgeCommand;
 import at.fhv.sysarch.lab2.homeautomation.environment.MqttEnvironmentActor;
 import at.fhv.sysarch.lab2.homeautomation.environment.TemperatureEnvironmentActor;
 import at.fhv.sysarch.lab2.homeautomation.environment.WeatherEnvironmentActor;
@@ -60,8 +63,11 @@ public class HomeAutomationController extends AbstractBehavior<Void> {
         ActorRef<MqttEnvironmentActor.MqttCommand> mqttEnvironment =
                 context.spawn(MqttEnvironmentActor.create(weatherEnv, temperatureEnv), "MqttEnvironment");
 
+        ActorRef<FridgeCommand> fridge =
+                context.spawn(Fridge.create(20, 10.0), "Fridge");
 
-        ActorRef<Void> ui = context.spawn(UI.create(temperatureSensor, airCondition, temperatureEnv, weatherEnv, blinds, mediaStation, mqttEnvironment),
+
+        ActorRef<Void> ui = context.spawn(UI.create(temperatureSensor, airCondition, temperatureEnv, weatherEnv, blinds, mediaStation, mqttEnvironment,fridge),
                 "UI");
 
 

@@ -9,6 +9,10 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import at.fhv.sysarch.lab2.homeautomation.commands.airCondition.AirConditionCommand;
 import at.fhv.sysarch.lab2.homeautomation.commands.blinds.BlindsCommand;
+import at.fhv.sysarch.lab2.homeautomation.commands.fridge.FridgeCommand;
+import at.fhv.sysarch.lab2.homeautomation.commands.fridge.ProductsResponse;
+import at.fhv.sysarch.lab2.homeautomation.commands.fridge.QueryProducts;
+import at.fhv.sysarch.lab2.homeautomation.commands.fridge.RemoveProduct;
 import at.fhv.sysarch.lab2.homeautomation.commands.mediaStation.MediaCommand;
 import at.fhv.sysarch.lab2.homeautomation.commands.mediaStation.PlayMovie;
 import at.fhv.sysarch.lab2.homeautomation.commands.mediaStation.StopMovie;
@@ -36,7 +40,7 @@ public class UI extends AbstractBehavior<Void> {
     private final ActorRef<BlindsCommand> blinds;
     private final ActorRef<MediaCommand> mediaStation;
     private final ActorRef<MqttEnvironmentActor.MqttCommand> mqttEnv;
-
+    private final ActorRef<FridgeCommand> fridge;
 
     public static Behavior<Void> create(
             ActorRef<TemperatureCommand> tempSensor,
@@ -45,9 +49,10 @@ public class UI extends AbstractBehavior<Void> {
             ActorRef<WeatherEnvironmentActor.WeatherEnvironmentCommand> weatherEnv,
             ActorRef<BlindsCommand> blinds,
             ActorRef<MediaCommand> mediaStation,
-            ActorRef<MqttEnvironmentActor.MqttCommand> mqttEnv
+            ActorRef<MqttEnvironmentActor.MqttCommand> mqttEnv,
+            ActorRef<FridgeCommand> fridge
     ) {
-        return Behaviors.setup(ctx -> new UI(ctx, tempSensor, airCondition, tempEnv, weatherEnv, blinds, mediaStation, mqttEnv));
+        return Behaviors.setup(ctx -> new UI(ctx, tempSensor, airCondition, tempEnv, weatherEnv, blinds, mediaStation, mqttEnv, fridge));
     }
 
     private UI(
@@ -57,7 +62,9 @@ public class UI extends AbstractBehavior<Void> {
             ActorRef<TemperatureEnvironmentActor.TemperatureEnvironmentCommand> tempEnv,
             ActorRef<WeatherEnvironmentActor.WeatherEnvironmentCommand> weatherEnv,
             ActorRef<BlindsCommand> blinds,
-            ActorRef<MediaCommand> mediaStation, ActorRef<MqttEnvironmentActor.MqttCommand> mqttEnv
+            ActorRef<MediaCommand> mediaStation,
+            ActorRef<MqttEnvironmentActor.MqttCommand> mqttEnv,
+            ActorRef<FridgeCommand> fridge
     ) {
         super(context);
         this.tempSensor = tempSensor;
@@ -67,10 +74,12 @@ public class UI extends AbstractBehavior<Void> {
         this.blinds = blinds;
         this.mediaStation = mediaStation;
         this.mqttEnv = mqttEnv;
+        this.fridge = fridge;
 
         new Thread(this::runCommandLine).start();
         context.getLog().info("UI started");
     }
+
 
     private void runCommandLine() {
         Scanner scanner = new Scanner(System.in);
@@ -90,6 +99,8 @@ public class UI extends AbstractBehavior<Void> {
                 movie-start          → Start a movie
                 movie-stop           → Stop the movie
                 env-mode <mode>      → Set environment mode (INTERNAL, EXTERNAL, OFF)
+                consume <name>        → Remove a product from the fridge
+                query                 → Show current fridge contents
                 quit                 → Exit
                 """);
 
@@ -158,6 +169,24 @@ public class UI extends AbstractBehavior<Void> {
                             System.out.println("Invalid mode. Use INTERNAL, EXTERNAL, or OFF.");
                         }
                     }
+                    break;
+
+                case "consume":
+                    if (command.length == 2) {
+                        fridge.tell(new RemoveProduct(command[1]));
+                    }
+                    break;
+
+                case "query":
+                    fridge.tell(new QueryProducts(getContext().messageAdapter(ProductsResponse.class, resp -> {
+                        System.out.println("=== Fridge Contents ===");
+                        if (resp.products().isEmpty()) {
+                            System.out.println("(empty)");
+                        } else {
+                            resp.products().forEach(p -> System.out.printf("- %s (%.2f kg, €%.2f)%n", p.getName(), p.getWeight(), p.getPrice()));
+                        }
+                        return null; // Since the UI doesn't need to react further
+                    })));
                     break;
 
 

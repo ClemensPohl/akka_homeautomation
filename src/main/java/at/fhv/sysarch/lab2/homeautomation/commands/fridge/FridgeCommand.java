@@ -1,7 +1,7 @@
 package at.fhv.sysarch.lab2.homeautomation.commands.fridge;
 
 
-import at.fhv.sysarch.lab2.homeautomation.devices.fridge.Product;
+import akka.actor.typed.ActorRef;
 
 public interface FridgeCommand {}
 
