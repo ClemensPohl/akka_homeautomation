@@ -36,7 +36,7 @@ public class MqttEnvironmentActor extends AbstractBehavior<MqttEnvironmentActor.
     }
 
     private final String broker = "tcp://10.0.40.161:1883";
-    private final List<String> topics = Arrays.asList("weather/condition", "temperature/value");
+    private final List<String> topics = Arrays.asList("weather/condition", "weather/temperature");
     private MqttClient client;
     private final ActorRef<WeatherEnvironmentActor.WeatherEnvironmentCommand> weatherController;
     private final ActorRef<TemperatureEnvironmentActor.TemperatureEnvironmentCommand> temperatureController;
@@ -124,8 +124,6 @@ public class MqttEnvironmentActor extends AbstractBehavior<MqttEnvironmentActor.
             return this;
         }
 
-        System.out.println("receivegd: " + msg.message);
-
         switch (msg.topic) {
             case "weather/condition":
                 WeatherTypes weatherType = parseWeather(msg.message);
@@ -134,11 +132,10 @@ public class MqttEnvironmentActor extends AbstractBehavior<MqttEnvironmentActor.
                 }
                 break;
 
-            case "temperature/value":
+            case "weather/temperature":
                 Double temperature = parseTemperature(msg.message);
                 if (temperature != null) {
                     temperatureController.tell(new TemperatureEnvironmentActor.SetTemperature(temperature));
-                    System.out.println("Set Temperatur from mqtt to " + temperature);
                 }
                 break;
 
