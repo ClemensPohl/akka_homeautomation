@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package at.fhv.sysarch.lab2.fridge.grpc;
+
+option java_package = "at.fhv.sysarch.lab2.homeautomation.devices.fridge.grpc";
+option java_multiple_files = true;
+
+service FridgeOrderService {
+  rpc OrderProduct (OrderRequest) returns (OrderReceipt);
+}
+
+message OrderRequest {
+  string productName = 1;
+  int32 amount = 2;
+}
+
+message OrderReceipt {
+  string productName = 1;
+  int32 amount = 2;
+  double price = 3;
+  string message = 4;
+}

@@ -9,6 +9,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 
 import at.fhv.sysarch.lab2.homeautomation.commands.airCondition.AirConditionCommand;
+import at.fhv.sysarch.lab2.homeautomation.commands.fridge.FridgeCommand;
 import at.fhv.sysarch.lab2.homeautomation.commands.temperature.TemperatureCommand;
 import at.fhv.sysarch.lab2.homeautomation.commands.weather.WeatherCommand;
 import at.fhv.sysarch.lab2.homeautomation.commands.blinds.BlindsCommand;
@@ -20,6 +21,9 @@ import at.fhv.sysarch.lab2.homeautomation.devices.WeatherSensor;
 import at.fhv.sysarch.lab2.homeautomation.devices.Blinds;
 import at.fhv.sysarch.lab2.homeautomation.devices.MediaStation;
 
+import at.fhv.sysarch.lab2.homeautomation.devices.fridge.Fridge;
+import at.fhv.sysarch.lab2.homeautomation.devices.fridge.grpc.FridgeGrpcOrderClient;
+import at.fhv.sysarch.lab2.homeautomation.devices.fridge.grpc.OrderProcessorActor;
 import at.fhv.sysarch.lab2.homeautomation.environment.MqttEnvironmentActor;
 import at.fhv.sysarch.lab2.homeautomation.environment.TemperatureEnvironmentActor;
 import at.fhv.sysarch.lab2.homeautomation.environment.WeatherEnvironmentActor;
@@ -63,6 +67,17 @@ public class HomeAutomationController extends AbstractBehavior<Void> {
 
         ActorRef<Void> ui = context.spawn(UI.create(temperatureSensor, airCondition, temperatureEnv, weatherEnv, blinds, mediaStation, mqttEnvironment),
                 "UI");
+
+        // Create the gRPC client (needs the ActorSystem)
+        FridgeGrpcOrderClient grpcClient = new FridgeGrpcOrderClient(context.getSystem());
+
+// Create the order processor actor
+        ActorRef<FridgeCommand> orderProcessor =
+                context.spawn(OrderProcessorActor.create(grpcClient), "OrderProcessor");
+
+// Create the fridge actor, passing the orderProcessor
+        ActorRef<FridgeCommand> fridge =
+                context.spawn(Fridge.create(20, 50.0, orderProcessor), "Fridge");
 
 
         getContext().getLog().info("HomeAutomation Application started");

@@ -1,28 +1,38 @@
+buildscript {
+    repositories {
+        gradlePluginPortal()
+        maven { url = "https://repo.akka.io/maven" }
+    }
+}
 plugins {
     id 'java'
     id 'application'
+    id 'com.google.protobuf' version '0.9.4'
+    id 'com.lightbend.akka.grpc.gradle' version '2.5.5'
 }
 
-group 'at.fhv.lab2'
-version '1.0-SNAPSHOT'
+akkaGrpc {
+    generateClient = true
+    generateServer = true
+}
 
 repositories {
     mavenCentral()
-    maven {
-        url "https://repo.akka.io/maven"
-    }
+    maven { url = "https://repo.akka.io/maven" }
 }
 
+group = 'at.fhv.lab2'
+version = '1.0-SNAPSHOT'
+
 dependencies {
+    implementation 'org.scala-lang:scala-library:2.13.15'
     implementation 'com.typesafe.akka:akka-actor_3:2.10.2'
     implementation 'com.typesafe.akka:akka-actor-typed_3:2.10.2'
     implementation 'com.typesafe.akka:akka-actor-testkit-typed_3:2.10.2'
     implementation 'ch.qos.logback:logback-classic:1.5.18'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
-    //    MQTT
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
-    //    JSObject
     implementation 'org.json:json:20250107'
 }
 
